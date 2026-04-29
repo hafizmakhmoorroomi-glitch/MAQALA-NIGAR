@@ -72,7 +72,7 @@ export function UrduEditor({ initialText, onClear }: UrduEditorProps) {
           children: docParagraphs.map(p => {
             let size = 32; // 16pt
             let bold = false;
-            let alignment = AlignmentType.BOTH; // FULL JUSTIFY
+            let alignment: (typeof AlignmentType)[keyof typeof AlignmentType] = AlignmentType.BOTH; // FULL JUSTIFY
             
             if (p.type === 'chapter') {
               size = 48; // 24pt

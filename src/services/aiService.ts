@@ -1,44 +1,23 @@
-import { GoogleGenAI } from "@google/genai";
-
-const apiKey = process.env.GEMINI_API_KEY;
-
-let ai: GoogleGenAI | null = null;
-
-if (apiKey) {
-  ai = new GoogleGenAI({ apiKey });
-}
-
 export async function transcribeUrduHandwriting(fileData: string, mimeType: string): Promise<string> {
-  if (!ai) {
-    throw new Error("GEMINI_API_KEY is not configured.");
-  }
-
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: [
-        {
-          parts: [
-            {
-              text: "Transcribe the handwritten Urdu text from this document accurately. Maintain the structure and paragraphs. Only return the Urdu text without any comments or introductory phrases. Use high-quality Nastaliq style transcription."
-            },
-            {
-              inlineData: {
-                data: fileData,
-                mimeType: mimeType
-              }
-            }
-          ]
-        }
-      ],
-      config: {
-        temperature: 0.2,
-      }
+    const response = await fetch("/api/transcribe", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ fileData, mimeType }),
     });
 
-    return response.text || "";
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to transcribe document.");
+    }
+
+    const data = await response.json();
+    return data.text || "";
   } catch (error) {
     console.error("OCR Error:", error);
-    throw new Error("Failed to transcribe document. Please check your image/PDF quality.");
+    throw error instanceof Error ? error : new Error("Failed to connect to transcription service.");
   }
 }
+

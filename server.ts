@@ -1,7 +1,7 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 async function startServer() {
   const app = express();
@@ -9,17 +9,24 @@ async function startServer() {
 
   app.use(express.json({ limit: '50mb' }));
 
+  // Request logger
+  app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    next();
+  });
+
   // AI Transcription API Route
   app.post("/api/transcribe", async (req, res) => {
     const { fileData, mimeType } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
+      console.error("Missing GEMINI_API_KEY");
       return res.status(500).json({ error: "GEMINI_API_KEY is not set on the server." });
     }
 
     try {
-      const genAI = new GoogleGenAI({ apiKey }) as any;
+      const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
       const result = await model.generateContent([
@@ -30,15 +37,15 @@ async function startServer() {
           }
         },
         {
-          text: "Transcribe the handwritten Urdu text from this document accurately. Maintain the structure and paragraphs. Use high-quality Nastaliq style transcription. If there is Arabic text, ensure it is preserved correctly."
+          text: "Transcribe the handwritten Urdu text from this document accurately. Maintain the structure and paragraphs. Use high-quality Nastaliq style transcription. If there is Arabic text, ensure it is preserved correctly. Return JUST the transcription."
         }
       ]);
 
       const text = result.response.text();
       res.json({ text });
     } catch (error) {
-      console.error("Transcription error:", error);
-      res.status(500).json({ error: "Failed to transcribe document." });
+      console.error("Transcription error detail:", error);
+      res.status(500).json({ error: error instanceof Error ? error.message : "Failed to transcribe document." });
     }
   });
 

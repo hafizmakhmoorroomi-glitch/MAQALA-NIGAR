@@ -7,12 +7,20 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
+  // Middleware first!
   app.use(express.json({ limit: '50mb' }));
-
-  // Request logger
+  
+  // Request logger to terminal
   app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+    console.log(`\n>>> [${new Date().toLocaleTimeString()}] ${req.method} ${req.url}`);
+    if (req.method === 'POST') console.log('Payload size:', JSON.stringify(req.body).length);
     next();
+  });
+
+  // Health check/Testing route
+  app.get("/api/test", (req, res) => {
+    console.log("Health check hit");
+    res.json({ status: "Server is online!", time: new Date().toISOString() });
   });
 
   // AI Transcription API Route
@@ -20,9 +28,11 @@ async function startServer() {
     const { fileData, mimeType } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
 
+    console.log("Transcribe requested. API Key present:", !!apiKey);
+
     if (!apiKey) {
-      console.error("Missing GEMINI_API_KEY");
-      return res.status(500).json({ error: "GEMINI_API_KEY is not set on the server." });
+      console.error("CRITICAL: GEMINI_API_KEY is not defined in the environment.");
+      return res.status(500).json({ error: "GEMINI_API_KEY is missing on the server. Please check your config." });
     }
 
     try {

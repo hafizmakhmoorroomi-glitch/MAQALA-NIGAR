@@ -1,0 +1,6 @@
+{
+  "name": "Urdu Article Writer - اردو مقالہ نگار",
+  "description": "An Urdu paper/article writing tool with OCR capabilities to convert handwritten text to Nastaliq typed text.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["AI-powered OCR", "Urdu Nastaliq Editor", "A4 Export"]
+}

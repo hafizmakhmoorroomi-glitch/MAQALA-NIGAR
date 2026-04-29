@@ -71,20 +71,6 @@ export default function App() {
           <span className="text-sm font-sans text-neutral-400 mt-2 block">
             Convert handwritten articles to professional Nastaliq typed documents instantly.
           </span>
-          <button 
-            onClick={async () => {
-              try {
-                const res = await fetch('/api/test');
-                const data = await res.json();
-                alert('Success: ' + data.status + '\nTime: ' + data.time);
-              } catch (e) {
-                alert('Connection Error (404/500). Please ensure GEMINI_API_KEY is configured in your project settings/environment.');
-              }
-            }}
-            className="mt-6 text-[10px] text-neutral-400 uppercase tracking-widest hover:text-neutral-900 transition-colors underline decoration-dotted underline-offset-4"
-          >
-            Check Server Connection
-          </button>
         </div>
       </header>
 

@@ -36,28 +36,47 @@ export function UrduEditor({ initialText, onClear }: UrduEditorProps) {
     setIsExporting(true);
     try {
       // Group lines into semantic paragraphs for Word export
-      const lines = text.split('\n');
+      // This ensures that lines originating from the same block of text are joined
+      const rawLines = text.split('\n');
       const docParagraphs: { type: 'chapter' | 'subheading' | 'normal', text: string }[] = [];
       
-      lines.forEach(line => {
+      let currentNormalBlock = '';
+
+      rawLines.forEach(line => {
         const trimmed = line.trim();
-        if (!trimmed) return;
+        if (!trimmed) {
+          if (currentNormalBlock) {
+            docParagraphs.push({ type: 'normal', text: currentNormalBlock.trim() });
+            currentNormalBlock = '';
+          }
+          return;
+        }
 
         if (isChapter(trimmed)) {
+          if (currentNormalBlock) {
+            docParagraphs.push({ type: 'normal', text: currentNormalBlock.trim() });
+            currentNormalBlock = '';
+          }
           docParagraphs.push({ type: 'chapter', text: trimmed });
         } else if (isSubheading(trimmed)) {
+          if (currentNormalBlock) {
+            docParagraphs.push({ type: 'normal', text: currentNormalBlock.trim() });
+            currentNormalBlock = '';
+          }
           docParagraphs.push({ type: 'subheading', text: trimmed });
         } else {
-          const last = docParagraphs[docParagraphs.length - 1];
-          if (last && last.type === 'normal') {
-            last.text += ' ' + trimmed;
-          } else {
-            docParagraphs.push({ type: 'normal', text: trimmed });
-          }
+          // Join fragmented lines into a single paragraph
+          currentNormalBlock += (currentNormalBlock ? ' ' : '') + trimmed;
         }
       });
 
+      if (currentNormalBlock) {
+        docParagraphs.push({ type: 'normal', text: currentNormalBlock.trim() });
+      }
+
       const doc = new Document({
+        title: "Urdu Article",
+        creator: "Urdu Makala Nigari App",
         sections: [{
           properties: {
             page: {
@@ -72,7 +91,7 @@ export function UrduEditor({ initialText, onClear }: UrduEditorProps) {
           children: docParagraphs.map(p => {
             let size = 32; // 16pt
             let bold = false;
-            let alignment: (typeof AlignmentType)[keyof typeof AlignmentType] = AlignmentType.BOTH; // FULL JUSTIFY
+            let alignment: any = AlignmentType.BOTH;
             
             if (p.type === 'chapter') {
               size = 48; // 24pt
@@ -95,7 +114,9 @@ export function UrduEditor({ initialText, onClear }: UrduEditorProps) {
               children: [
                 new TextRun({
                   text: p.text,
-                  font: isArabic(p.text) ? 'Amiri' : 'Noto Nastaliq Urdu',
+                  font: {
+                    name: isArabic(p.text) ? 'Amiri' : 'Noto Nastaliq Urdu',
+                  },
                   size: size,
                   bold: bold,
                   rightToLeft: true,
@@ -107,7 +128,7 @@ export function UrduEditor({ initialText, onClear }: UrduEditorProps) {
       });
 
       const blob = await Packer.toBlob(doc);
-      saveAs(blob, 'Urdu_Article.docx');
+      saveAs(blob, `Article_${new Date().getTime()}.docx`);
     } catch (err) {
       console.error('Word export error:', err);
     } finally {
@@ -138,33 +159,42 @@ export function UrduEditor({ initialText, onClear }: UrduEditorProps) {
 
   const processPageText = (lines: string[]) => {
     const segments: { type: 'chapter' | 'subheading' | 'normal', text: string, arabic: boolean }[] = [];
-    
+    let currentNormalBlock = '';
+
     lines.forEach(line => {
       const trimmed = line.trim();
+      
       if (!trimmed) {
-        // Add a placeholder for paragraph break or force next segment to be new
-        segments.push({ type: 'normal', text: '', arabic: false }); 
+        if (currentNormalBlock) {
+          segments.push({ type: 'normal', text: currentNormalBlock.trim(), arabic: isArabic(currentNormalBlock) });
+          currentNormalBlock = '';
+        }
         return;
       }
 
-      if (isChapter(trimmed)) {
-        segments.push({ type: 'chapter', text: trimmed, arabic: isArabic(trimmed) });
-      } else if (isSubheading(trimmed)) {
-        segments.push({ type: 'subheading', text: trimmed, arabic: isArabic(trimmed) });
-      } else {
-        const last = segments[segments.length - 1];
-        if (last && last.type === 'normal' && last.text !== '') {
-          last.text += ' ' + trimmed;
-        } else if (last && last.type === 'normal' && last.text === '') {
-          last.text = trimmed;
-          last.arabic = isArabic(trimmed);
-        } else {
-          segments.push({ type: 'normal', text: trimmed, arabic: isArabic(trimmed) });
+      const chapter = isChapter(trimmed);
+      const sub = isSubheading(trimmed);
+
+      if (chapter || sub) {
+        if (currentNormalBlock) {
+          segments.push({ type: 'normal', text: currentNormalBlock.trim(), arabic: isArabic(currentNormalBlock) });
+          currentNormalBlock = '';
         }
+        segments.push({ 
+          type: chapter ? 'chapter' : 'subheading', 
+          text: trimmed, 
+          arabic: isArabic(trimmed) 
+        });
+      } else {
+        currentNormalBlock += (currentNormalBlock ? ' ' : '') + trimmed;
       }
     });
 
-    return segments.filter(s => s.text !== '').map((seg, idx) => (
+    if (currentNormalBlock) {
+      segments.push({ type: 'normal', text: currentNormalBlock.trim(), arabic: isArabic(currentNormalBlock) });
+    }
+
+    return segments.map((seg, idx) => (
       <div
         key={idx}
         className={cn(

@@ -9,7 +9,7 @@
 
 @layer base {
   body {
-    @apply bg-neutral-50 text-neutral-900;
+    @apply bg-[#fdfcfb] text-neutral-900;
   }
 
   [dir="rtl"] {
@@ -21,17 +21,18 @@
   .a4-page {
     width: 210mm;
     min-height: 297mm;
-    padding: 25mm 20mm;
-    margin: 10mm auto;
+    padding: 30mm 25mm;
+    margin: 20mm auto;
     background: white;
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);
     position: relative;
     overflow: hidden;
+    border: 1px solid #f0efeb;
   }
 
   .urdu-text {
     font-family: var(--font-urdu);
-    line-height: 2.2;
+    line-height: 2.6;
     text-align: justify;
     text-justify: inter-word;
     direction: rtl;
@@ -45,9 +46,9 @@
   }
 
   /* Specific Font Sizes */
-  .text-chapter { font-size: 24px; font-weight: 700; margin-bottom: 0.8em; text-align: center; display: block; width: 100%; }
-  .text-subheading { font-size: 20px; font-weight: 700; margin-top: 1.2em; margin-bottom: 0.5em; text-align: right; display: block; width: 100%; }
-  .text-normal { font-size: 16px; font-weight: 400; line-height: 2.4; text-align: justify; display: inline; }
+  .text-chapter { font-size: 24px; font-weight: 700; margin-bottom: 1.5em; text-align: center; display: block; width: 100%; color: #1a1a1a; }
+  .text-subheading { font-size: 20px; font-weight: 700; margin-top: 1.8em; margin-bottom: 0.8em; text-align: right; display: block; width: 100%; color: #333; }
+  .text-normal { font-size: 16px; font-weight: 400; line-height: 2.8; text-align: justify; display: block; width: 100%; color: #444; }
 }
 
 @media print {

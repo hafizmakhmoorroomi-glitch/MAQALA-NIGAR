@@ -112,16 +112,27 @@ export default function App() {
         </div>
       </main>
 
-      <AnimatePresence>
+      <AnimatePresence mode="wait">
         {error && (
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.9 }}
-            className="fixed bottom-10 px-6 py-3 bg-red-600 text-white rounded-full shadow-2xl flex items-center gap-3 z-50"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="fixed bottom-10 inset-x-0 mx-auto w-fit max-w-[90vw] px-6 py-4 bg-white border-l-4 border-red-500 shadow-2xl rounded-xl flex items-start gap-4 z-50 overflow-hidden"
           >
-            <CheckCircle2 className="w-5 h-5" />
-            <span className="text-sm font-medium">{error}</span>
+            <div className="bg-red-50 p-2 rounded-lg shrink-0">
+              <CheckCircle2 className="w-5 h-5 text-red-600 rotate-180" />
+            </div>
+            <div className="flex flex-col gap-1 pr-6">
+              <span className="text-sm font-bold text-neutral-900">System Error</span>
+              <span className="text-xs text-neutral-600 leading-relaxed max-w-sm">{error}</span>
+              <button 
+                onClick={() => setError(null)}
+                className="mt-2 text-[10px] uppercase tracking-wider font-bold text-neutral-400 hover:text-neutral-900"
+              >
+                Dismiss
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

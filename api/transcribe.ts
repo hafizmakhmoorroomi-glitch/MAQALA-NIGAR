@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default async function handler(req: any, res: any) {
@@ -6,10 +7,17 @@ export default async function handler(req: any, res: any) {
   }
 
   const { fileData, mimeType } = req.body;
-  const apiKey = process.env.GEMINI_API_KEY;
+  const rawApiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  let apiKey = rawApiKey?.trim();
+  
+  if (apiKey?.startsWith('"') && apiKey?.endsWith('"')) apiKey = apiKey.slice(1, -1).trim();
+  if (apiKey?.startsWith("'") && apiKey?.endsWith("'")) apiKey = apiKey.slice(1, -1).trim();
 
-  if (!apiKey) {
-    return res.status(500).json({ error: "GEMINI_API_KEY is not set on the server." });
+  if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey === "") {
+    console.error("Missing GEMINI_API_KEY in Vercel function.");
+    return res.status(500).json({ 
+      error: "GEMINI_API_KEY missing. Please add it to Environment Variables in Vercel settings." 
+    });
   }
 
   try {

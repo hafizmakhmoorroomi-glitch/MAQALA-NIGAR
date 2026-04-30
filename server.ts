@@ -1,6 +1,7 @@
 import express from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
+import "dotenv/config";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 async function startServer() {
@@ -26,13 +27,17 @@ async function startServer() {
   // AI Transcription API Route
   app.post("/api/transcribe", async (req, res) => {
     const { fileData, mimeType } = req.body;
-    const apiKey = process.env.GEMINI_API_KEY;
+    const rawApiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+    let apiKey = rawApiKey?.trim();
+    
+    if (apiKey?.startsWith('"') && apiKey?.endsWith('"')) apiKey = apiKey.slice(1, -1).trim();
+    if (apiKey?.startsWith("'") && apiKey?.endsWith("'")) apiKey = apiKey.slice(1, -1).trim();
 
-    console.log("Transcribe requested. API Key present:", !!apiKey);
-
-    if (!apiKey) {
-      console.error("CRITICAL: GEMINI_API_KEY is not defined in the environment.");
-      return res.status(500).json({ error: "GEMINI_API_KEY is missing on the server. Please check your config." });
+    if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey === "") {
+      console.error("CRITICAL: GEMINI_API_KEY is missing. Available Env Keys:", Object.keys(process.env).filter(k => k.includes("API") || k.includes("KEY")));
+      return res.status(500).json({ 
+        error: "GEMINI_API_KEY missing. Please ensure you have added a secret named 'GEMINI_API_KEY' in the AI Studio sidebar and clicked 'Apply changes'." 
+      });
     }
 
     try {
